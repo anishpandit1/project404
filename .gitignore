@@ -4,10 +4,7 @@ node_modules/
 # Rollup cache
 .rollup.cache/
 
-src/chatbot.js
-src/command.js
-src/load-ascii.js
-src/main.js
+src/
 
 # Logs
 npm-debug.log*
