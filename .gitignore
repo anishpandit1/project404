@@ -4,7 +4,7 @@ node_modules/
 # Rollup cache
 .rollup.cache/
 
-src/
+src
 
 # Logs
 npm-debug.log*
