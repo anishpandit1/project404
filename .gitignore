@@ -4,9 +4,7 @@ node_modules/
 # Rollup cache
 .rollup.cache/
 
-# Build output
-/dist/
-
+/src/
 # Logs
 npm-debug.log*
 
