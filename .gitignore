@@ -1,0 +1,17 @@
+# Node.js dependencies
+node_modules/
+
+# Rollup cache
+.rollup.cache/
+
+# Build output
+/dist/
+
+# Logs
+npm-debug.log*
+
+# System files
+.DS_Store
+
+# Optional: Ignore any environment-specific files (like dotenv files)
+.env
