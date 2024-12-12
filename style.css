@@ -3,7 +3,7 @@ body {
     color: white;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
     overflow: hidden; /* Hide overflow initially */
-    font-size: large;
+    font-size: 16px;
 }
 
 #terminal {
@@ -27,7 +27,7 @@ body {
     color: white;
     font-family: "Trebuchet MS", Helvetica, sans-serif;
     font-weight: 600;
-    font-size: large;
+    font-size: 16px;
     width: 100%;
     outline: none;
 }
