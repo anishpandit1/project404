@@ -106,3 +106,8 @@ pre {
         transform: translateY(45vh);
     }
 }
+
+#quote-container {
+    color: white;
+    font-style: italic;
+}
