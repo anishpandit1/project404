@@ -274,7 +274,7 @@
   // ---------- content: edit this block to make it yours ----------
   const DATA = {
     name: "Anish Pandit",
-    role: "Software Breaker · Kathmandu, Nepal",
+    role: "Software Breaker · Kathmandu, Nepal, Currently in Bergen, Norway",
     tagline: "Surviving, barely.",
     about: [
       "The tea in Nepal is hot, but the coffee in Peru is ...?",
@@ -291,12 +291,13 @@
       { name: "project-three", desc: "Placeholder for now and ever :P", link: "#" }
     ],
     social: {
-      GitHub: "https://github.com/",
+      GitHub: "https://github.com/anishpandit1",
       LinkedIn: "https://linkedin.com/in/",
       Email: "not now .p"
     },
     timeline: [
       { date: "2026", tag: "now",  msg: "Building anishpandit.com.np v2 — this terminal" },
+      { date: "2025", tag: "edu",  msg: "M.Sc. Computer Science - University Of Oslo" },
       { date: "2024", tag: "work", msg: "System Admin and IT support, yeah baby!!!" },
       { date: "2022", tag: "work", msg: "Network Support @ NOC" },
       { date: "2021", tag: "edu",  msg: "B.Sc. Computer Science — The New Summit College" }
@@ -518,7 +519,7 @@
       printRaw(`<a href="mailto:${DATA.social.Email}">${DATA.social.Email}</a>`);
     },
     resume(){
-      print("resume.pdf not linked yet — drop your file in and point this command at it.", "warn");
+      print("404 - not found resume.pdf not linked yet", "warn");
     },
     neofetch(){
       printRaw(`
