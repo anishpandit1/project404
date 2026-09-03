@@ -1,30 +1,700 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" href="assets/g1.png"  type="image/png">
-    <title>AnishP</title>
-    <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>anish@np ~ </title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-void:#05070a;
+    --bg-glass: rgba(13,18,17,0.86);
+    --bg-panel:#0d1211;
+    --line: rgba(126,231,135,0.14);
+    --fg: #d7e3d9;
+    --fg-dim: #7c8c81;
+    --phosphor: #7ee787;
+    --phosphor-dim: #4b8a55;
+    --amber: #f2b463;
+    --violet: #a89cf5;
+    --err: #f27878;
+    --radius: 10px;
+  }
+  *{ box-sizing:border-box; }
+  html,body{
+    height:100%;
+    margin:0;
+    background: var(--bg-void);
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    color: var(--fg);
+    overflow:hidden;
+  }
+
+  /* ambient backdrop */
+  body::before{
+    content:"";
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse 60% 45% at 22% 15%, rgba(126,231,135,0.07), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 85% 90%, rgba(168,156,245,0.06), transparent 60%),
+      var(--bg-void);
+    z-index:0;
+  }
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 3px);
+    pointer-events:none;
+    z-index:5;
+    mix-blend-mode: overlay;
+  }
+
+  .stage{
+    position:relative;
+    z-index:1;
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 4vh 3vw;
+  }
+
+  .term{
+    position:relative;
+    width:min(920px, 96vw);
+    height:min(640px, 88vh);
+    display:flex;
+    flex-direction:column;
+    background: var(--bg-glass);
+    backdrop-filter: blur(18px);
+    border:1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow:
+      0 40px 80px -20px rgba(0,0,0,0.7),
+      0 0 0 1px rgba(255,255,255,0.02) inset,
+      0 0 60px -10px rgba(126,231,135,0.05);
+    overflow:hidden;
+    animation: rise 0.7s cubic-bezier(.16,1,.3,1) both;
+  }
+  @keyframes rise{
+    from{ opacity:0; transform: translateY(18px) scale(0.985); }
+    to{ opacity:1; transform: translateY(0) scale(1); }
+  }
+
+  .titlebar{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:11px 16px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0));
+    border-bottom:1px solid var(--line);
+    flex-shrink:0;
+    user-select:none;
+  }
+  .dots{ display:flex; gap:7px; }
+  .dots span{
+    width:11px; height:11px; border-radius:50%;
+    background: rgba(255,255,255,0.14);
+    border:1px solid rgba(255,255,255,0.06);
+  }
+  .titlebar .path{
+    margin:0 auto;
+    font-size:12.5px;
+    color: var(--fg-dim);
+    letter-spacing:0.02em;
+    display:flex; align-items:center; gap:7px;
+  }
+  .titlebar .path .lock{ color: var(--phosphor-dim); font-size:11px; }
+  .titlebar .status{
+    font-size:11px;
+    color: var(--fg-dim);
+    display:flex; align-items:center; gap:6px;
+  }
+  .status .pulse{
+    width:7px; height:7px; border-radius:50%;
+    background: var(--phosphor);
+    box-shadow: 0 0 8px var(--phosphor);
+    animation: blink 2.4s ease-in-out infinite;
+  }
+  @keyframes blink{ 0%,100%{opacity:1} 50%{opacity:0.35} }
+
+  .screen{
+    flex:1;
+    overflow-y:auto;
+    padding:20px 22px 12px;
+    font-size:14px;
+    line-height:1.65;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(126,231,135,0.25) transparent;
+  }
+  .screen::-webkit-scrollbar{ width:8px; }
+  .screen::-webkit-scrollbar-thumb{ background: rgba(126,231,135,0.18); border-radius:8px; }
+
+  .line{ white-space:pre-wrap; word-break:break-word; margin:0 0 2px; }
+  .out{ color: var(--fg); margin-bottom:10px; }
+  .muted{ color: var(--fg-dim); }
+  .ok{ color: var(--phosphor); }
+  .warn{ color: var(--amber); }
+  .err{ color: var(--err); }
+  .accent{ color: var(--violet); }
+  a{ color: var(--phosphor); text-decoration:none; border-bottom:1px solid var(--phosphor-dim); }
+  a:hover{ color: var(--amber); border-color: var(--amber); }
+
+  .prompt-row{ display:flex; gap:8px; align-items:baseline; }
+  .prompt-tag{ color: var(--phosphor); white-space:nowrap; }
+  .prompt-tag .at{ color: var(--fg-dim); }
+  .prompt-tag .path{ color: var(--violet); }
+  .prompt-cmd{ color: var(--fg); }
+
+  .input-row{
+    display:flex; align-items:center; gap:8px;
+    border-top:1px solid var(--line);
+    padding:13px 22px;
+    flex-shrink:0;
+  }
+  .input-row .glyph{ color: var(--phosphor); }
+  .input-row input{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color: var(--fg);
+    font: inherit;
+    font-size:14px;
+    caret-color: var(--phosphor);
+  }
+  .input-row input::selection{ background: rgba(126,231,135,0.25); }
+
+  table.kv{ border-collapse:collapse; margin:6px 0 10px; }
+  table.kv td{ padding:2px 14px 2px 0; vertical-align:top; }
+  table.kv td.k{ color: var(--fg-dim); }
+
+  .ascii{ color: var(--phosphor); line-height:1.15; font-size:12px; }
+  .neofetch{ display:flex; gap:24px; flex-wrap:wrap; margin:8px 0 12px; }
+  .bar{ display:inline-block; width:120px; height:6px; background:rgba(255,255,255,0.08); border-radius:3px; overflow:hidden; vertical-align:middle; margin-left:8px;}
+  .bar i{ display:block; height:100%; background: linear-gradient(90deg, var(--phosphor-dim), var(--phosphor)); }
+
+  .grid-cmds{ display:grid; grid-template-columns: 120px 1fr; gap:4px 14px; margin:6px 0 10px; }
+  .grid-cmds .c{ color: var(--phosphor); }
+
+  @media (max-width: 640px){
+    .screen{ font-size:13px; padding:16px; }
+    .term{ height: 92vh; }
+    .neofetch{ flex-direction:column; gap:10px; }
+  }
+
+  ::selection{ background: rgba(126,231,135,0.25); }
+
+  /* matrix rain overlay */
+  #matrixCanvas{
+    position:absolute; inset:0;
+    z-index:20;
+    display:none;
+    cursor:pointer;
+  }
+  #matrixHint{
+    position:absolute; bottom:10px; left:50%; transform:translateX(-50%);
+    font-size:11px; color:#7ee787aa; z-index:21; display:none;
+    letter-spacing:0.03em; pointer-events:none;
+  }
+
+  /* vim / nano fake editor */
+  .editor{
+    position:absolute; inset:0;
+    z-index:20;
+    background: #05070a;
+    display:none;
+    flex-direction:column;
+    font-size:14px;
+  }
+  .editor .buf{
+    flex:1; padding:14px 18px; overflow-y:auto;
+    color:var(--fg); white-space:pre-wrap; line-height:1.6;
+  }
+  .editor .buf .tilde{ color: var(--phosphor-dim); }
+  .editor .statusbar{
+    background: var(--phosphor-dim); color:#05070a;
+    font-weight:600; font-size:12px; padding:5px 14px;
+    display:flex; justify-content:space-between;
+  }
+  .editor .cmdline-hint{
+    padding:4px 14px; font-size:12px; color: var(--fg-dim);
+    border-top:1px solid var(--line);
+  }
+
+  /* git-log style timeline */
+  .gitlog .row{ display:flex; gap:10px; align-items:baseline; flex-wrap:wrap; }
+  .gitlog .hash{ color: var(--amber); }
+  .gitlog .tag{ color: var(--phosphor); background: rgba(126,231,135,0.1); border:1px solid var(--phosphor-dim); border-radius:4px; padding:0 6px; font-size:11.5px; }
+  .gitlog .date{ color: var(--fg-dim); font-size:12.5px; }
+
+  /* now playing */
+  .nowplaying{ display:flex; gap:14px; align-items:center; margin:6px 0 10px; }
+  .np-art{ width:52px; height:52px; border-radius:6px; background:linear-gradient(135deg, var(--phosphor-dim), var(--violet)); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:20px; }
+  .np-bar{ height:4px; width:100%; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden; margin-top:6px; }
+  .np-bar i{ display:block; height:100%; background:var(--phosphor); }
+  .np-eq{ display:inline-flex; gap:2px; align-items:flex-end; height:12px; margin-left:8px; }
+  .np-eq span{ width:2px; background:var(--phosphor); animation: eq 0.9s ease-in-out infinite; }
+  .np-eq span:nth-child(2){ animation-delay:0.2s; }
+  .np-eq span:nth-child(3){ animation-delay:0.4s; }
+  @keyframes eq{ 0%,100%{ height:3px; } 50%{ height:11px; } }
+</style>
 </head>
 <body>
-    <div id="loader">
-        <div class="loading-text">Loading</div>
-        <div id="ascii-art-container"></div>
-        <div id="progress-bar-container">
-            <div id="progress-bar"></div>
-        </div>
-    </div>
 
-    <div id="terminal">
-        <div id="ascii-art"></div>
-        <div id="quote-container"></div>
-        <div class="output-line">Welcome to my Personal Home Page(PHP) site :D<br>Use the minimalistic terminal below to know more about me. Major upgrades coming soon.<br><br>These shell commands are defined internally.  Type 'help' to see the available commands.</div>
-        <div class="input-line">
-            <span>$&nbsp;</span>
-            <input type="text" id="userInput" autofocus>
-        </div>
+<div class="stage">
+  <div class="term" id="term">
+    <div class="titlebar">
+      <div class="dots"><span></span><span></span><span></span></div>
+      <div class="path"><span class="lock">●</span> anish@np: ~</div>
+      <div class="status"><span class="pulse"></span> online</div>
     </div>
-    <script src="dist/bundle.js"></script>
+    <div class="screen" id="screen"></div>
+    <canvas id="matrixCanvas"></canvas>
+    <div id="matrixHint">press any key to exit</div>
+    <div class="editor" id="editor">
+      <div class="buf" id="editorBuf"></div>
+      <div class="statusbar" id="editorStatus">-- INSERT --</div>
+      <div class="cmdline-hint">type <b>:q</b> and press Enter to exit</div>
+    </div>
+    <div class="input-row">
+      <span class="glyph" id="promptGlyph">❯</span>
+      <input id="cmdline" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" autofocus />
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const screen = document.getElementById('screen');
+  const input = document.getElementById('cmdline');
+  const term = document.getElementById('term');
+
+  // ---------- content: edit this block to make it yours ----------
+  const DATA = {
+    name: "Anish Pandit",
+    role: "Software Breaker · Kathmandu, Nepal",
+    tagline: "Surviving, barely.",
+    about: [
+      "The tea in Nepal is hot, but the coffee in Peru is ...?",
+      "This terminal is my \"Personal Home Page\" — a nod to PHP and to doing things the hard, fun way."
+    ],
+    skills: {
+      "languages": ["JavaScript/TypeScript", "Python", "PHP", "Bash"],
+      "web": ["Node.js", "React", "REST APIs", "Linux/Nginx"],
+      "tools": ["Git", "Docker", "VS Code", "tmux"]
+    },
+    projects: [
+      { name: "anishpandit.com.np", desc: "This very terminal — a personal site built instead of a boring resume.", link: "#" },
+      { name: "project-two", desc: "Placeholder for now and ever :P.", link: "#" },
+      { name: "project-three", desc: "Placeholder for now and ever :P", link: "#" }
+    ],
+    social: {
+      GitHub: "https://github.com/",
+      LinkedIn: "https://linkedin.com/in/",
+      Email: "not now .p"
+    },
+    timeline: [
+      { date: "2026", tag: "now",  msg: "Building anishpandit.com.np v2 — this terminal" },
+      { date: "2024", tag: "work", msg: "System Admin and IT support, yeah baby!!!" },
+      { date: "2022", tag: "work", msg: "Network Support @ NOC" },
+      { date: "2021", tag: "edu",  msg: "B.Sc. Computer Science — The New Summit College" }
+    ],
+    nowPlayingEndpoint: "https://mysite-kappa-topaz.vercel.app/api/now-playing"
+  };
+  
+
+  const MOTD = [
+    "Fact: this terminal has no actual shell behind it. It's all vibes and JavaScript.",
+    "Quote: \"Talk is cheap. Show me the code.\" — Linus Torvalds",
+    "Tip: type 'ssh anish@somewhere' if you're feeling nosy.",
+    "Fact: .com.np is Nepal's country-code domain.",
+    "Quote: \"Simplicity is the soul of efficiency.\" — Austin Freeman",
+    "Tip: 'sudo' won't get you anywhere here. Nice try though.",
+    "Fact: green-on-black phosphor monitors were standard long before this font existed."
+  ];
+
+  let history = [];
+  let hIndex = -1;
+  let secretsUnlocked = false;
+
+  // mode machine: null | 'editor' | 'ssh-connecting' | 'ssh-password'
+  let mode = null;
+  const promptGlyph = document.getElementById('promptGlyph');
+  const editorEl = document.getElementById('editor');
+  const editorBuf = document.getElementById('editorBuf');
+  const editorStatus = document.getElementById('editorStatus');
+  const matrixCanvas = document.getElementById('matrixCanvas');
+  const matrixHint = document.getElementById('matrixHint');
+
+  function esc(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function linkify(s){
+    return esc(s).replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+  }
+  function printRaw(html){
+    const div = document.createElement('div');
+    div.className = 'line out';
+    div.innerHTML = html;
+    screen.appendChild(div);
+    screen.scrollTop = screen.scrollHeight;
+  }
+  function print(text, cls){
+    printRaw(`<span class="${cls||''}">${linkify(text)}</span>`);
+  }
+  function printPromptEcho(cmd){
+    printRaw(`<div class="prompt-row"><span class="prompt-tag">anish<span class="at">@</span>np<span class="at">:</span><span class="path">~</span>$</span><span class="prompt-cmd">&nbsp;${esc(cmd)}</span></div>`);
+  }
+
+  const ASCII = `
+   ▄▄▄       ███▄    █  ██▓  ██████  ██░ ██
+  ▒████▄     ██ ▀█   █ ▓██▒▒██    ▒ ▓██░ ██▒
+  ▒██  ▀█▄  ▓██  ▀█ ██▒▒██▒░ ▓██▄   ▒██▀▀██░
+  ░██▄▄▄▄██ ▓██▒  ▐▌██▒░██░  ▒   ██▒░▓█ ░██
+   ▓█   ▓██▒▒██░   ▓██░░██░▒██████▒▒░▓█▒░██▓
+   ▒▒   ▓▒█░░ ▒░   ▒ ▒ ░▓  ▒ ▒▓▒ ▒ ░ ▒ ░░▒░▒`;
+
+  // ---------- matrix rain ----------
+  let matrixTimer = null;
+  function startMatrix(){
+    mode = 'matrix';
+    matrixCanvas.style.display = 'block';
+    matrixHint.style.display = 'block';
+    const ctx = matrixCanvas.getContext('2d');
+    const resize = ()=>{
+      matrixCanvas.width = matrixCanvas.clientWidth;
+      matrixCanvas.height = matrixCanvas.clientHeight;
+    };
+    resize();
+    const chars = "アイウエオカキクケコサシスセソ0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const fontSize = 14;
+    const cols = Math.floor(matrixCanvas.width / fontSize);
+    const drops = new Array(cols).fill(1);
+    function draw(){
+      ctx.fillStyle = 'rgba(5,7,10,0.12)';
+      ctx.fillRect(0,0,matrixCanvas.width, matrixCanvas.height);
+      ctx.fillStyle = '#7ee787';
+      ctx.font = fontSize + 'px monospace';
+      for(let i=0;i<drops.length;i++){
+        const text = chars[Math.floor(Math.random()*chars.length)];
+        ctx.fillText(text, i*fontSize, drops[i]*fontSize);
+        if(drops[i]*fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
+        drops[i]++;
+      }
+    }
+    matrixTimer = setInterval(draw, 45);
+    const exit = ()=>{
+      clearInterval(matrixTimer);
+      matrixCanvas.style.display = 'none';
+      matrixHint.style.display = 'none';
+      mode = null;
+      matrixCanvas.removeEventListener('click', exit);
+      document.removeEventListener('keydown', exitKey, true);
+      input.focus();
+    };
+    const exitKey = (e)=>{ e.preventDefault(); exit(); };
+    matrixCanvas.addEventListener('click', exit);
+    document.addEventListener('keydown', exitKey, true);
+  }
+
+  // ---------- fake vim/nano editor ----------
+  function openEditor(kind){
+    mode = 'editor';
+    editorEl.style.display = 'flex';
+    editorStatus.textContent = kind === 'nano' ? "^X Exit    ^O Write Out    (or just type :q)" : "-- INSERT --";
+    let tildes = '';
+    for(let i=0;i<14;i++) tildes += '<span class="tilde">~</span>\n';
+    editorBuf.innerHTML = tildes;
+    input.value = '';
+    input.placeholder = "type :q or :wq and press Enter";
+    input.focus();
+  }
+  function closeEditor(){
+    mode = null;
+    editorEl.style.display = 'none';
+    input.placeholder = '';
+    input.focus();
+  }
+  function editorType(text){
+    const lines = editorBuf.innerText.split('\n').filter(l => l !== '~');
+    lines.unshift(text);
+    let html = lines.map(l => `<span>${esc(l)}</span>`).join('\n');
+    for(let i=0;i<8;i++) html += '\n<span class="tilde">~</span>';
+    editorBuf.innerHTML = html;
+  }
+
+  // ---------- fake ssh flow ----------
+  function startSsh(target){
+    mode = 'ssh-connecting';
+    print(`ssh: connecting to ${target || 'anish@somewhere'} ...`, "muted");
+    const steps = [
+      ["resolving host ...", 500],
+      ["establishing encrypted channel (curve25519-sha256) ...", 650],
+      ["host key accepted", 450]
+    ];
+    let t = 300;
+    steps.forEach(([msg,delay])=>{ t += delay; setTimeout(()=>print(msg,"muted"), t); });
+    setTimeout(()=>{
+      mode = 'ssh-password';
+      promptGlyph.textContent = '🔒';
+      input.type = 'password';
+      print(`${(target||'anish@somewhere').split('@')[0]}@somewhere's password:`, "warn");
+    }, t + 300);
+  }
+  function finishSsh(){
+    input.type = 'text';
+    promptGlyph.textContent = '❯';
+    mode = null;
+    print("authenticating ...", "muted");
+    setTimeout(()=>{
+      print("access granted.", "ok");
+      secretsUnlocked = true;
+      setTimeout(()=>{
+        printRaw(`
+<div class="line out">
+  <div class="ok">— hidden section unlocked —</div>
+  <div class="muted" style="margin-top:6px">Nothing dramatic in here, just a note: thanks for poking around instead of taking the site at face value. That kind of curiosity is basically the whole job description for a developer.</div>
+  <div class="muted" style="margin-top:6px">Try <span class="accent">cat secrets</span> now.</div>
+</div>`);
+      }, 350);
+    }, 500);
+  }
+
+  const COMMANDS = {
+    help(){
+      printRaw(`
+<div class="grid-cmds">
+  <span class="c">about</span><span>who I am, in short</span>
+  <span class="c">skills</span><span>tools I reach for</span>
+  <span class="c">projects</span><span>things I've built</span>
+  <span class="c">social</span><span>find me elsewhere</span>
+  <span class="c">contact</span><span>get in touch</span>
+  <span class="c">neofetch</span><span>system-style profile card</span>
+  <span class="c">resume</span><span>download / view resume</span>
+  <span class="c">theme</span><span>[phosphor|amber|violet|mono]</span>
+  <span class="c">timeline</span><span>career/education, git-log style</span>
+  <span class="c">nowplaying</span><span>what I'm listening to</span>
+  <span class="c">matrix</span><span>you know the one</span>
+  <span class="c">clear</span><span>clear the screen</span>
+  <span class="c">whoami</span><span>quick identity check</span>
+</div>`);
+      print("Tip: press Tab to autocomplete, ↑/↓ to browse history.", "muted");
+    },
+    about(){
+      print(`${DATA.name} — ${DATA.role}`, "ok");
+      DATA.about.forEach(p => print(p));
+    },
+    whoami(){
+      print(`${DATA.name.toLowerCase().replace(' ','_')}  (${DATA.role})`);
+    },
+    skills(){
+      let rows = '<table class="kv">';
+      for(const [k,v] of Object.entries(DATA.skills)){
+        rows += `<tr><td class="k">${esc(k)}</td><td>${v.map(esc).join(', ')}</td></tr>`;
+      }
+      rows += '</table>';
+      printRaw(rows);
+    },
+    projects(){
+      DATA.projects.forEach((p,i) => {
+        print(`${i+1}. ${p.name}`, "ok");
+        print(`   ${p.desc}`, "muted");
+        if(p.link && p.link !== "#") print(`   ${p.link}`, "accent");
+      });
+    },
+    social(){
+      let rows = '<table class="kv">';
+      for(const [k,v] of Object.entries(DATA.social)){
+        const val = k === "Email" ? `<a href="mailto:${v}">${v}</a>` : `<a href="${v}" target="_blank" rel="noopener">${v}</a>`;
+        rows += `<tr><td class="k">${esc(k)}</td><td>${val}</td></tr>`;
+      }
+      rows += '</table>';
+      printRaw(rows);
+    },
+    contact(){
+      print("Best way to reach me:", "ok");
+      printRaw(`<a href="mailto:${DATA.social.Email}">${DATA.social.Email}</a>`);
+    },
+    resume(){
+      print("resume.pdf not linked yet — drop your file in and point this command at it.", "warn");
+    },
+    neofetch(){
+      printRaw(`
+<div class="neofetch">
+  <pre class="ascii">${ASCII}</pre>
+  <table class="kv">
+    <tr><td class="k">user</td><td>${esc(DATA.name)}</td></tr>
+    <tr><td class="k">role</td><td>${esc(DATA.role)}</td></tr>
+    <tr><td class="k">os</td><td>anishOS 1.0 (browser-native)</td></tr>
+    <tr><td class="k">shell</td><td>ptybox</td></tr>
+    <tr><td class="k">uptime</td><td><span id="uptime">0s</span></td></tr>
+    <tr><td class="k">focus</td><td>web &amp; systems<span class="bar"><i style="width:82%"></i></span></td></tr>
+    <tr><td class="k">status</td><td><span class="ok">available for work</span></td></tr>
+  </table>
+</div>`);
+      const start = Date.now();
+      const el = document.getElementById('uptime');
+      if(el){
+        const t = setInterval(()=>{ if(!document.body.contains(el)){ clearInterval(t); return;} el.textContent = Math.floor((Date.now()-start)/1000)+'s'; }, 1000);
+      }
+    },
+    clear(){ screen.innerHTML = ''; },
+    theme(arg){
+      const themes = {
+        phosphor: { p:'#7ee787', pd:'#4b8a55', v:'#a89cf5', a:'#f2b463' },
+        amber:    { p:'#f2b463', pd:'#a9793e', v:'#f5c99c', a:'#7ee787' },
+        violet:   { p:'#a89cf5', pd:'#6f63b8', v:'#7ee787', a:'#f2b463' },
+        mono:     { p:'#d7e3d9', pd:'#7c8c81', v:'#a7b3ac', a:'#eef2ee' }
+      };
+      const t = themes[(arg||'').toLowerCase()];
+      if(!t){ print("usage: theme [phosphor|amber|violet|mono]", "warn"); return; }
+      const r = document.documentElement.style;
+      r.setProperty('--phosphor', t.p);
+      r.setProperty('--phosphor-dim', t.pd);
+      r.setProperty('--violet', t.v);
+      r.setProperty('--amber', t.a);
+      print(`theme set → ${arg}`, "ok");
+    },
+    date(){ print(new Date().toString()); },
+    echo(arg){ print(arg || ""); },
+    history(){ history.forEach((c,i)=> print(`${i+1}  ${c}`, "muted")); },
+    sudo(){ print("nice try. permission denied — this incident will not be reported (probably).", "err"); },
+    exit(){ print("there is no escape. this is a website, not a shell. try 'clear' instead.", "warn"); },
+    ls(){ print("about  skills  projects  social  contact  resume  neofetch  timeline  secrets/"); },
+    "cat"(arg){
+      if(arg === "secrets" || arg === "secrets/"){
+        if(secretsUnlocked){
+          print("a note, decrypted:", "ok");
+          print("\"Every project on this page started as a folder called 'test'. Ship anyway.\"", "muted");
+        } else {
+          print("permission denied. try connecting first — 'ssh anish@somewhere'.", "err");
+        }
+        return;
+      }
+      print(`cat: ${arg||''}: no such file`, "err");
+    },
+    timeline(){
+      let html = '<div class="gitlog">';
+      DATA.timeline.forEach((e,i)=>{
+        const hash = (i*7919 + 48879).toString(16).slice(0,7);
+        html += `<div class="row"><span class="hash">${hash}</span><span class="date">${esc(e.date)}</span><span class="tag">${esc(e.tag)}</span><span>${esc(e.msg)}</span></div>`;
+      });
+      html += '</div>';
+      printRaw(html);
+      print(`${DATA.timeline.length} commits`, "muted");
+    },
+    nowplaying(){
+      const render = (track)=>{
+        printRaw(`
+<div class="nowplaying">
+  <div class="np-art">♪</div>
+  <div>
+    <div><b>${esc(track.name)}</b> ${track.playing ? '<span class="np-eq"><span></span><span></span><span></span></span>' : ''}</div>
+    <div class="muted">${esc(track.artist)} — ${esc(track.album)}</div>
+    <div class="np-bar"><i style="width:${track.progress}%"></i></div>
+  </div>
+</div>`);
+        if(!DATA.nowPlayingEndpoint){
+          print("(mock data — set DATA.nowPlayingEndpoint to your own Spotify proxy for the real thing)", "muted");
+        }
+      };
+      if(DATA.nowPlayingEndpoint){
+        print("checking Spotify ...", "muted");
+        fetch(DATA.nowPlayingEndpoint).then(r=>r.json()).then(render)
+          .catch(()=> print("couldn't reach the now-playing endpoint.", "err"));
+      } else {
+        render({ name:"Weightless", artist:"Placeholder Artist", album:"Placeholder Album", progress:42, playing:true });
+      }
+    },
+    matrix(){ startMatrix(); },
+    vim(){ openEditor('vim'); },
+    nano(){ openEditor('nano'); },
+    ssh(arg){ startSsh(arg); }
+  };
+  const ALIASES = { "ls -la": "ls", "man": "help", "?": "help" };
+
+  function run(raw){
+    const cmdRaw = raw.trim();
+    if(!cmdRaw) return;
+    history.push(cmdRaw); hIndex = history.length;
+    printPromptEcho(cmdRaw);
+
+    const [cmd0, ...rest] = cmdRaw.split(/\s+/);
+    const cmd = (ALIASES[cmdRaw] || cmd0).toLowerCase();
+    const arg = rest.join(' ');
+
+    if(COMMANDS[cmd]){
+      try{ COMMANDS[cmd](arg); }
+      catch(e){ print("something broke. classic.", "err"); }
+    } else {
+      print(`command not found: ${esc(cmd0)} — type 'help' to see what's available.`, "err");
+    }
+  }
+
+  input.addEventListener('keydown', (e)=>{
+    if(mode === 'editor'){
+      if(e.key === 'Enter'){
+        const v = input.value; input.value = '';
+        if(v === ':q' || v === ':q!' || v === ':wq' || v === ':x'){
+          closeEditor();
+        } else if(v.length){
+          editorType(v);
+        }
+      }
+      return;
+    }
+    if(mode === 'ssh-password'){
+      if(e.key === 'Enter'){
+        input.value = '';
+        finishSsh();
+      }
+      return;
+    }
+    if(mode === 'matrix'){ return; }
+
+    if(e.key === 'Enter'){
+      const v = input.value; input.value=''; run(v);
+    } else if(e.key === 'ArrowUp'){
+      e.preventDefault();
+      if(hIndex>0){ hIndex--; input.value = history[hIndex] || ''; }
+    } else if(e.key === 'ArrowDown'){
+      e.preventDefault();
+      if(hIndex < history.length-1){ hIndex++; input.value = history[hIndex] || ''; }
+      else { hIndex = history.length; input.value=''; }
+    } else if(e.key === 'Tab'){
+      e.preventDefault();
+      const partial = input.value.toLowerCase();
+      const match = Object.keys(COMMANDS).find(c => c.startsWith(partial) && partial.length>0);
+      if(match) input.value = match;
+    }
+  });
+  term.addEventListener('click', ()=> input.focus());
+
+  // boot sequence
+  const boot = [
+    "booting anishOS 1.0 ...",
+    "loading kernel modules  [ok]",
+    "mounting /home/anish    [ok]",
+    "starting ptybox shell   [ok]",
+    ""
+  ];
+  function typeBoot(i){
+    if(i >= boot.length){
+      print(`Welcome to ${DATA.name}'s terminal.`, "ok");
+      print(DATA.tagline, "muted");
+      print("Type 'help' to see available commands.", "muted");
+      printRaw('<div style="height:4px"></div>');
+      print(MOTD[Math.floor(Math.random()*MOTD.length)], "accent");
+      printRaw('<div style="height:4px"></div>');
+      return;
+    }
+    print(boot[i], i<boot.length-1 ? "muted" : "");
+    setTimeout(()=>typeBoot(i+1), i===0? 260 : 110);
+  }
+  typeBoot(0);
+})();
+</script>
 </body>
 </html>
